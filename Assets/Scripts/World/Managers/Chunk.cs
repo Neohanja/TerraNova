@@ -15,6 +15,7 @@ public class Chunk
     Vector2Int chunkCord;
     Vector2 chunkPos;
     byte[,,] chunkData;
+    int[,] chunkHeight;
 
     Chunk northChunk;
     Chunk eastChunk;
@@ -80,6 +81,7 @@ public class Chunk
     public void BuildChunkData(Biome[] biomes, GenRules noiseGen, int seed)
     {
         chunkData = new byte[ChunkSize, ChunkHeight, ChunkSize];
+        chunkHeight = new int[ChunkSize, ChunkSize];
         float[,] heightMap = BuildChunk.HeightMap(chunkCord * ChunkSize, ChunkSize, biomes, noiseGen, seed);
         Vector2[,] biomeMap = BuildChunk.BiomeMap(chunkCord * ChunkSize, ChunkSize, biomes, noiseGen.vScale, seed);
 
@@ -88,6 +90,7 @@ public class Chunk
             for (int z = 0; z < ChunkSize; z++)
             {
                 int tHeight = MathFun.Round(heightMap[x, z] * noiseGen.growth) + noiseGen.minHeight;
+                chunkHeight[x, z] = tHeight + 1;
                 int biomeIndex = MathFun.Floor(biomeMap[x, z].y);
 
                 for (int y = 0; y < ChunkHeight; y++)
@@ -115,10 +118,36 @@ public class Chunk
                     {
                         useTile = biomes[biomeIndex].primaryTile;
                     }
+                    else if (y == tHeight + 1)
+                    {
+                        //flora
+                        if (biomes[biomeIndex].biomeFlora != null)
+                        {
+                            for (int f = 0; f < biomes[biomeIndex].biomeFlora.Length; f++)
+                            {
+                                Flora flora = biomes[biomeIndex].biomeFlora[f];
+                                float chance = RanGen.PullNumber(seed, chunkCord.x * ChunkSize + x, chunkCord.y * ChunkSize + z, flora.placementOffset) % 101 / 100f;
+                                if (chance <= flora.placementChance)
+                                {
+                                    useTile = flora.trunk;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                     chunkData[x, y, z] = useTile;
                 }
             }
         }
+    }
+
+    public int GetHeight(Vector2Int position)
+    {
+        if(position.x < 0 || position.y < 0 || position.x >= ChunkSize || position.y >= ChunkSize)
+        {
+            return ChunkHeight;
+        }
+        return chunkHeight[position.x, position.y];
     }
 
     public void AttachChunk(ChunkDirection direction, Chunk chunk)

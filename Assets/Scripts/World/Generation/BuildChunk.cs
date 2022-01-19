@@ -94,13 +94,20 @@ public static class BuildChunk
                 float pNoise = 0f;
                 for (int l = 0; l < noiseGen.layer.Length; l++)
                 {
+                    float influence = 1f;
+
+                    if(MathFun.Between(0, layerMap.Count - 1, noiseGen.layer[l].layerInfluence))
+                    {
+                        influence = layerMap[noiseGen.layer[l].layerInfluence][x, z];
+                    }
+
                     switch(noiseGen.layer[l].ampType)
                     {
                         case NoiseLayer.LayerAmp.Add:
-                            pNoise += layerMap[l][x, z];
+                            pNoise += layerMap[l][x, z] * influence;
                             break;
                         case NoiseLayer.LayerAmp.Multiply:
-                            pNoise *= layerMap[l][x, z];
+                            pNoise *= layerMap[l][x, z] * influence;
                             break;
                         case NoiseLayer.LayerAmp.PushFromZero:
                             float move = layerMap[l][x, z];
@@ -114,7 +121,7 @@ public static class BuildChunk
                                 if (move < 0)
                                     move *= -1;
                             }
-                            pNoise += move;
+                            pNoise += move * influence;
                             break;
                     }                    
                 }

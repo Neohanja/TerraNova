@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Plains
   m_EditorClassIdentifier: 
   biomeName: Plains
-  biomeHeight: 0.3
+  biomeHeight: 0.1
   primaryTile: 3
   secondaryTile: 2
   secondaryDepth: 3
@@ -21,8 +21,8 @@ MonoBehaviour:
   - floraName: Oak
     trunk: 5
     foliage: 0
-    placementOffset: 57
-    placementChance: 0.447
+    placementOffset: 14
+    placementChance: 0.046
     growthOffset: 26
     minHeight: 3
     growth: 4

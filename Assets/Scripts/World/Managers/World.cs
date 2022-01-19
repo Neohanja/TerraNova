@@ -37,6 +37,12 @@ public class World : MonoBehaviour
     {
         worldMats[0].mainTexture = TextureAtlas.GameTextures.BuildAtlas();
         BuildMap(new Vector2Int(0, 0));
+
+        if (PMovement.Player != null)
+        {
+            int pHeight = GetHeight(new Vector2(0, 0));
+            PMovement.Player.SetSpawn(new Vector3(0.5f, pHeight, 0.5f));
+        }
     }
 
     void BuildMap(Vector2Int center)
@@ -47,6 +53,24 @@ public class World : MonoBehaviour
             {
                 AddChunk(new Vector2Int(x, y) + center);
             }
+        }
+    }
+
+    public int GetHeight(Vector2 location)
+    {
+        int chunkX = MathFun.Floor(location.x / Chunk.ChunkSize);
+        int chunkY = MathFun.Floor(location.y / Chunk.ChunkSize);
+        Vector2Int chunkIndex = new Vector2Int(chunkY, chunkX);
+
+        if(chunkMap.ContainsKey(chunkIndex))
+        {
+            int posX = MathFun.Floor(location.x - chunkX * Chunk.ChunkSize);
+            int posY = MathFun.Floor(location.y - chunkY * Chunk.ChunkSize);
+            return chunkMap[chunkIndex].GetHeight(new Vector2Int(posX, posY));
+        }
+        else
+        {
+            return Chunk.ChunkHeight;
         }
     }
 

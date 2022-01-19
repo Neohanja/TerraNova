@@ -4,7 +4,25 @@ using UnityEngine;
 
 public class PMovement : Movement
 {
-    // Update is called once per frame
+    public static PMovement Player { private set; get; }
+
+    void Awake()
+    {
+        if(Player != null && Player != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Player = this;
+        }
+    }
+
+    protected override void Initialize()
+    {
+        base.Initialize();
+    }
+
     public override void GetMomentum()
     {
         float vert = Input.GetAxis("Vertical");

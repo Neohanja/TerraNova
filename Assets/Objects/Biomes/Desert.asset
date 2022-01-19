@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Desert
   m_EditorClassIdentifier: 
   biomeName: Desert
-  biomeHeight: 0.4
+  biomeHeight: 0.35
   primaryTile: 6
   secondaryTile: 6
   secondaryDepth: 5

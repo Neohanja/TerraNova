@@ -12,6 +12,14 @@ public static class MathFun
         return val;
     }
 
+    public static bool Between(float a, float b, float val, bool inclusive = true)
+    {
+        if (inclusive)
+            return a <= val && b >= val;
+        else
+            return a < val && b > val;
+    }
+
     public static float Lerp(float min, float max, float percent)
     {
         return min + percent * (max - min);
