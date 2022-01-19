@@ -4,9 +4,9 @@ using UnityEngine;
 
 public static class BuildChunk
 {
-    public static Vector2[,] VornoiModMap(Vector2Int chunkPos, int size, Biome[] biomes, float vScale, int seed)
+    public static float[,] VornoiMap(Vector2Int startPos, int size, Biome[] biomes, NoiseLayer noiseGen, int seed)
     {
-        Vector2[,] falloffMap = new Vector2[size, size];
+        float[,] noiseMap = new float[size, size];
 
         // (0, 0); (0, 1); (1, 0); (1, 1)
         float[] corners = new float[4];
@@ -15,9 +15,9 @@ public static class BuildChunk
         {
             for (int cY = 0; cY < 2; cY++)
             {
-                float sampleX = (chunkPos.x + cX * size) / vScale;
-                float sampleY = (chunkPos.y + cY * size) / vScale;
-                int bIndex = MathFun.Floor(Noise.VornoiNoise(new Vector2(sampleX, sampleY), biomes.Length, seed).y);
+                float sampleX = (startPos.x + cX * size) / noiseGen.scale;
+                float sampleY = (startPos.y + cY * size) / noiseGen.scale;
+                int bIndex = MathFun.Floor(Noise.VoronoiNoise(new Vector2(sampleX, sampleY), biomes.Length, seed).y);
 
                 corners[cX + cY * 2] = biomes[bIndex].biomeHeight;
             }
@@ -27,9 +27,6 @@ public static class BuildChunk
         {
             for (int y = 0; y < size; y++)
             {
-                float sampleX = (chunkPos.x + x) / vScale;
-                float sampleY = (chunkPos.y + y) / vScale;
-                int mainInfluence = MathFun.Floor(Noise.VornoiNoise(new Vector2(sampleX, sampleY), biomes.Length, seed).y);
 
                 float cX = MathFun.Curve(x / (float)size);
                 float cY = MathFun.Curve(y / (float)size);
@@ -37,11 +34,95 @@ public static class BuildChunk
                 float x2 = MathFun.Lerp(corners[2], corners[3], cX);
                 float height = MathFun.Lerp(x1, x2, cY);
 
-                falloffMap[x, y] = new Vector2(height, mainInfluence);
+                noiseMap[x, y] = height * noiseGen.strength;
             }
         }
 
-        return falloffMap;
+        return noiseMap;
+    }
+
+    
+    public static float[,] GradMap(Vector2Int startPos, int size, NoiseLayer noiseGen, int seed)
+    {
+        float[,] biomeMap = new float[size, size];
+
+        for (int x = 0; x < size; x++)
+        {
+            for (int z = 0; z < size; z++)
+            {
+                float xSample = (startPos.x + x) / noiseGen.scale;
+                float ySample = (startPos.y + z) / noiseGen.scale;
+                float gNoise = Noise.Noise2D(xSample, ySample, noiseGen.noiseOffset, seed);
+
+                if(noiseGen.normalize)
+                {
+                    gNoise = (gNoise + 1) * 0.5f;
+                }
+
+                biomeMap[x, z] = gNoise * noiseGen.strength;
+            }
+        }
+
+        return biomeMap;
+    }
+
+    public static float[,] HeightMap(Vector2Int startPos, int size, Biome[] biomes, GenRules noiseGen, int seed)
+    {
+        float[,] heightMap = new float[size, size];
+
+        Vector2[,] biomeMap = BiomeMap(startPos, size, biomes, noiseGen.vScale, seed);
+
+        List<float[,]> layerMap = new List<float[,]>();
+
+        for(int l = 0; l < noiseGen.layer.Length; ++l)
+        {
+            switch(noiseGen.layer[l].noiseType)
+            {
+                case NoiseLayer.LayerType.Voronoi:
+                    layerMap.Add(VornoiMap(startPos, size, biomes, noiseGen.layer[l], seed));
+                    break;
+                case NoiseLayer.LayerType.Grad:
+                    layerMap.Add(GradMap(startPos, size, noiseGen.layer[l], seed));
+                    break;
+            }
+        }
+
+        for (int x = 0; x < size; x++)
+        {
+            for (int z = 0; z < size; z++)
+            {
+                float pNoise = 0f;
+                for (int l = 0; l < noiseGen.layer.Length; l++)
+                {
+                    switch(noiseGen.layer[l].ampType)
+                    {
+                        case NoiseLayer.LayerAmp.Add:
+                            pNoise += layerMap[l][x, z];
+                            break;
+                        case NoiseLayer.LayerAmp.Multiply:
+                            pNoise *= layerMap[l][x, z];
+                            break;
+                        case NoiseLayer.LayerAmp.PushFromZero:
+                            float move = layerMap[l][x, z];
+                            if (pNoise < 0)
+                            {
+                                if (move > 0)
+                                    move *= -1;
+                            }
+                            else
+                            {
+                                if (move < 0)
+                                    move *= -1;
+                            }
+                            pNoise += move;
+                            break;
+                    }                    
+                }
+                heightMap[x, z] = pNoise * biomeMap[x, z].x;
+            }
+        }
+
+        return heightMap;
     }
 
     public static Vector2[,] BiomeMap(Vector2Int startPos, int size, Biome[] biomes, float scale, int seed)
@@ -49,7 +130,7 @@ public static class BuildChunk
         Vector2[,] biomeMap = new Vector2[size, size];
         float bWeight = 1f / biomes.Length;
 
-        for(int x = 0; x < size; x++)
+        for (int x = 0; x < size; x++)
         {
             for (int z = 0; z < size; z++)
             {
@@ -57,7 +138,7 @@ public static class BuildChunk
                 float ySample = (startPos.y + z) / scale;
                 float gNoise = (Noise.Noise2D(xSample, ySample, 216, seed) + 1f) * 0.5f;
 
-                for(int b = 0; b < biomes.Length; b++)
+                for (int b = 0; b < biomes.Length; b++)
                 {
                     if (gNoise <= bWeight * (b + 1))
                     {
@@ -83,82 +164,5 @@ public static class BuildChunk
         }
 
         return biomeMap;
-    }
-
-    public static float[,] HeightMap(Vector2Int startPos, int size, Biome[] biomes, GenRules noiseGen, int seed)
-    {
-        float[,] heightMap = new float[size, size];
-        Vector2[,] biomeMap = BiomeMap(startPos, size, biomes, noiseGen.vScale, seed);
-
-        for (int x = 0; x < size; x++)
-        {
-            for (int z = 0; z < size; z++)
-            {
-                float pNoise = 0f;
-                float freq = 1f;
-                float amp = 1f;
-
-                for (int o = 0; o < noiseGen.octaves; o++)
-                {
-                    float xSample = (startPos.x + x) / noiseGen.gScale * freq;
-                    float ySample = (startPos.y + z) / noiseGen.gScale * freq;
-
-                    float gNoise = (Noise.Noise2D(xSample, ySample, MathFun.Floor(MathFun.Power(3, o)) - 1, seed) + 1) * 0.5f;
-                    pNoise += gNoise * amp;
-                    amp *= noiseGen.amplify;
-                    freq *= noiseGen.frequency;
-                }
-
-                heightMap[x, z] = pNoise * biomeMap[x, z].x;
-            }
-        }
-
-        return heightMap;
-    }
-
-    public static byte[,,] ChunkMap(Vector2Int chunkPos, Biome[] biomes, GenRules noiseGen, int seed)
-    {
-        byte[,,] chunkData = new byte[Chunk.ChunkSize, Chunk.ChunkHeight, Chunk.ChunkSize];
-        float[,] heightMap = HeightMap(chunkPos, Chunk.ChunkSize, biomes, noiseGen, seed);
-        Vector2[,] biomeMap = BiomeMap(chunkPos, Chunk.ChunkSize, biomes, noiseGen.vScale, seed);
-
-        for(int x = 0; x < Chunk.ChunkSize; x++)
-        {
-            for (int z = 0; z < Chunk.ChunkSize; z++)
-            {
-                int tHeight = MathFun.Round(heightMap[x, z] * noiseGen.growth) + noiseGen.minHeight;
-                int biomeIndex = MathFun.Floor(biomeMap[x, z].y);
-
-                for (int y = 0; y < Chunk.ChunkHeight; y++)
-                {
-                    byte useTile = 0;
-
-                    if(y == 0)
-                    {
-                        useTile = 1;
-                    }
-                    else if(y < noiseGen.seaLevel && y > tHeight)
-                    {
-                        // Water
-                        useTile = 4;
-                    }
-                    else if(y < tHeight - biomes[biomeIndex].secondaryDepth)
-                    {
-                        useTile = 1;
-                    }
-                    else if(y < tHeight)
-                    {
-                        useTile = biomes[biomeIndex].secondaryTile;
-                    }
-                    else if(y == tHeight)
-                    {
-                        useTile = biomes[biomeIndex].primaryTile;
-                    }
-                    chunkData[x, y, z] = useTile;
-                }
-            }
-        }
-
-        return chunkData;
     }
 }

@@ -32,10 +32,10 @@ public class Chunk
 
         chunkCord = point;
         chunkPos = point * ChunkSize;
-        chunkObj.transform.position = new Vector3(chunkPos.x, 0, chunkPos.y);
-        chunkData = BuildChunk.ChunkMap(chunkCord * ChunkSize, World.WorldMap.biomes, World.WorldMap.worldGen, World.WorldMap.worldSeed);
+        chunkObj.transform.position = new Vector3(chunkPos.x, 0, chunkPos.y);        
         chunkObj.transform.SetParent(World.WorldMap.transform);
 
+        BuildChunkData(World.WorldMap.biomes, World.WorldMap.worldGen, World.WorldMap.worldSeed);
         BuildChunkMesh();
     }
 
@@ -75,6 +75,50 @@ public class Chunk
         }
 
         chunkMeshData.ApplyMesh();
+    }
+
+    public void BuildChunkData(Biome[] biomes, GenRules noiseGen, int seed)
+    {
+        chunkData = new byte[ChunkSize, ChunkHeight, ChunkSize];
+        float[,] heightMap = BuildChunk.HeightMap(chunkCord * ChunkSize, ChunkSize, biomes, noiseGen, seed);
+        Vector2[,] biomeMap = BuildChunk.BiomeMap(chunkCord * ChunkSize, ChunkSize, biomes, noiseGen.vScale, seed);
+
+        for (int x = 0; x < ChunkSize; x++)
+        {
+            for (int z = 0; z < ChunkSize; z++)
+            {
+                int tHeight = MathFun.Round(heightMap[x, z] * noiseGen.growth) + noiseGen.minHeight;
+                int biomeIndex = MathFun.Floor(biomeMap[x, z].y);
+
+                for (int y = 0; y < ChunkHeight; y++)
+                {
+                    byte useTile = 0;
+
+                    if (y == 0)
+                    {
+                        useTile = 1;
+                    }
+                    else if (y < noiseGen.seaLevel && y > tHeight)
+                    {
+                        // Water
+                        useTile = 4;
+                    }
+                    else if (y < tHeight - biomes[biomeIndex].secondaryDepth)
+                    {
+                        useTile = 1;
+                    }
+                    else if (y < tHeight)
+                    {
+                        useTile = biomes[biomeIndex].secondaryTile;
+                    }
+                    else if (y == tHeight)
+                    {
+                        useTile = biomes[biomeIndex].primaryTile;
+                    }
+                    chunkData[x, y, z] = useTile;
+                }
+            }
+        }
     }
 
     public void AttachChunk(ChunkDirection direction, Chunk chunk)

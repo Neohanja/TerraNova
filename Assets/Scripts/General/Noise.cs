@@ -4,8 +4,8 @@ using UnityEngine;
 
 public static class Noise
 {
-    private static int a = 10001;
-    private static float b = 10000f;
+    private static int a = 101;
+    private static float b = 100f;
 
     // Graident Noise
     public static float Noise1D(float x, int seed)
@@ -69,7 +69,9 @@ public static class Noise
         return new Vector2(xP, yP);
     }
 
-    public static Vector2 VornoiNoise(Vector2 pos, int indexes, int seed)
+    //Voronoi Noise Generation Theories
+
+    public static Vector2 VoronoiNoise(Vector2 pos, int indexes, int seed)
     {
         Vector2 distanceIndex = new Vector2(2f, 0);
 
@@ -97,97 +99,4 @@ public static class Noise
 
         return distanceIndex;
     }
-
-    // Cell Automata
-    public static bool[,] CellAuto(int size, int seed, CellRules cellRules)
-    {
-        bool[,] grid = new bool[size, size];
-        RanGen cRNG = new RanGen(seed);
-
-        for (int x = 0; x < size; ++x)
-        {
-            for (int y = 0; y < size; ++y)
-            {
-                grid[x, y] = cRNG.Percent() <= cellRules.aliveStart;
-            }
-        }
-
-        for (int smooth = 0; smooth < cellRules.smoothing; ++smooth)
-        {
-            grid = SmoothCell(grid, cellRules);
-        }
-
-        return grid;
-    }
-
-    public static bool[,] SmoothCell(bool[,] trans, CellRules cellRules)
-    {
-        int size = trans.GetLength(0);
-        bool[,] grid = new bool[size, size];
-
-        for (int x = 0; x < size; ++x)
-        {
-            for (int y = 0; y < size; ++y)
-            {
-                int points = 0;
-                bool alive = trans[x, y];
-
-                for (int cX = -1; cX <= 1; ++cX)
-                {
-                    for (int cY = -1; cY <= 1; ++cY)
-                    {
-                        int pX = x + cX;
-                        int pY = y + cY;
-                        if (cY == 0 && cX == 0)
-                        {
-                            continue;
-                        }
-                        else if (pX < 0 || pX >= size || pY < 0 || pY >= size)
-                        {
-                            points++;
-                        }
-                        else if (trans[pX, pY])
-                        {
-                            points++;
-                        }
-                    }
-                }
-
-                if (points > cellRules.cellBirth) alive = true;
-                else if (points < cellRules.cellDeath) alive = false;
-                grid[x, y] = alive;
-            }
-        }
-
-        return grid;
-    }
-}
-
-[System.Serializable]
-public class GenRules
-{
-    public CellRules cellRules;
-    public float vScale;
-    public int minHeight;
-    public int growth;
-    public int seaLevel;
-
-    [Header("Grad Noise")]
-    public float gScale;
-    [Range(1, 8)]
-    public int octaves;
-    [Range(0.01f, 2f)]
-    public float amplify;
-    [Range(0.01f, 4f)]
-    public float frequency;
-}
-
-[System.Serializable]
-public class CellRules
-{
-    public int cellGridSize;
-    public int cellBirth;
-    public int cellDeath;
-    public int smoothing;
-    public float aliveStart;
 }
