@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11c961d127ab4d94bad0fc478caf90de, type: 3}
+  m_Name: Block
+  m_EditorClassIdentifier: 
+  shapeName: Block
+  topFace:
+    vertices:
+    - {x: 0, y: 1, z: 0}
+    - {x: 0, y: 1, z: 1}
+    - {x: 1, y: 1, z: 1}
+    - {x: 1, y: 1, z: 0}
+    trianges: 000000000100000002000000020000000300000000000000
+    uvMap:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 1, y: 0}
+    skipDraw: 0
+  bottomFace:
+    vertices:
+    - {x: 0, y: 0, z: 1}
+    - {x: 0, y: 0, z: 0}
+    - {x: 1, y: 0, z: 0}
+    - {x: 1, y: 0, z: 1}
+    trianges: 000000000100000002000000020000000300000000000000
+    uvMap:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 1, y: 0}
+    skipDraw: 0
+  northFace:
+    vertices:
+    - {x: 1, y: 0, z: 1}
+    - {x: 1, y: 1, z: 1}
+    - {x: 0, y: 1, z: 1}
+    - {x: 0, y: 0, z: 1}
+    trianges: 000000000100000002000000020000000300000000000000
+    uvMap:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 1, y: 0}
+    skipDraw: 0
+  eastFace:
+    vertices:
+    - {x: 1, y: 0, z: 0}
+    - {x: 1, y: 1, z: 0}
+    - {x: 1, y: 1, z: 1}
+    - {x: 1, y: 0, z: 1}
+    trianges: 000000000100000002000000020000000300000000000000
+    uvMap:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 1, y: 0}
+    skipDraw: 0
+  southFace:
+    vertices:
+    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 1, z: 0}
+    - {x: 1, y: 1, z: 0}
+    - {x: 1, y: 0, z: 0}
+    trianges: 000000000100000002000000020000000300000000000000
+    uvMap:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 1, y: 0}
+    skipDraw: 0
+  westFace:
+    vertices:
+    - {x: 0, y: 0, z: 1}
+    - {x: 0, y: 1, z: 1}
+    - {x: 0, y: 1, z: 0}
+    - {x: 0, y: 0, z: 0}
+    trianges: 000000000100000002000000020000000300000000000000
+    uvMap:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 1, y: 0}
+    skipDraw: 0

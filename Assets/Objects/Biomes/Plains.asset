@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c238364464d3b8d4c8c60180519de9e5, type: 3}
+  m_Name: Plains
+  m_EditorClassIdentifier: 
+  biomeName: Plains
+  biomeHeight: 0.3
+  primaryTile: 3
+  secondaryTile: 2
+  secondaryDepth: 3
+  biomeFlora:
+  - floraName: Oak
+    trunk: 5
+    foliage: 0
+    placementOffset: 57
+    placementChance: 0.447
+    growthOffset: 26
+    minHeight: 3
+    growth: 4
