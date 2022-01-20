@@ -71,32 +71,27 @@ public static class Noise
 
     //Voronoi Noise Generation Theories
 
-    public static Vector2 VoronoiNoise(Vector2 pos, int indexes, int seed)
+    public static Vector3[] VoronoiNoise(Vector2 pos, int offset, int indexes, int seed)
     {
-        Vector2 distanceIndex = new Vector2(2f, 0);
+        Vector3[] vPoints = new Vector3[9];
 
         int x = MathFun.Floor(pos.x);
         int y = MathFun.Floor(pos.y);
+        int index = 0;
 
         for(int oX = -1; oX <= 1; oX++)
         {
             for (int oY = -1; oY <= 1; oY++)
             {
-                //v is the 22nd letter in the alphabet, useful for a psuedo-random offset
+                // v is the 22nd letter in the alphabet, useful for a psuedo-random offset
                 // prn : psuedo random number
-                float prn = RanGen.PullNumber(seed, oX + x, oY + y, 22) % a / b;
-                float vX = x + oX + prn;
-                prn = RanGen.PullNumber(seed, oX + x, oY + y, 44) % a / b;
-                float vY = y + oY + prn;
-                float distance = Vector2.Distance(pos, new Vector2(vX, vY));
-                if(distanceIndex.x > distance)
-                {
-                    distanceIndex.x = distance;
-                    distanceIndex.y = RanGen.PullNumber(seed, oX + x, oY + y, 2) % indexes;
-                }
+                float vX = x + oX + RanGen.PullNumber(seed, oX + x, oY + y, 22 + offset) % a / b;
+                float vY = y + oY + RanGen.PullNumber(seed, oX + x, oY + y, 44 + offset) % a / b;
+                int height = RanGen.PullNumber(seed, oX + x, oY + y, 66 + offset) % indexes;
+                vPoints[index] = new Vector3(vX, vY, height);
             }
         }
 
-        return distanceIndex;
+        return vPoints;
     }
 }

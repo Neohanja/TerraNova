@@ -11,6 +11,8 @@ public class NoiseLayer
     public int noiseOffset;
     public bool normalize;
     public int layerInfluence = -1;
+    [Range(0f, 1f)]
+    public float threshold;
     public LayerAmp ampType;
     public LayerType noiseType;
 
@@ -18,7 +20,9 @@ public class NoiseLayer
     {
         Add,
         PushFromZero,
-        Multiply
+        Multiply,
+        CracksAdd,
+        CracksMult
     }
 
     public enum LayerType

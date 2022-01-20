@@ -4,36 +4,40 @@ using UnityEngine;
 
 public static class BuildChunk
 {
-    public static float[,] VornoiMap(Vector2Int startPos, int size, Biome[] biomes, NoiseLayer noiseGen, int seed)
+    public static float[,] VornoiMap(Vector2 startPos, int size, Biome[] biomes, NoiseLayer noiseGen, int seed)
     {
         float[,] noiseMap = new float[size, size];
-
-        // (0, 0); (0, 1); (1, 0); (1, 1)
-        float[] corners = new float[4];
-
-        for (int cX = 0; cX < 2; cX++)
-        {
-            for (int cY = 0; cY < 2; cY++)
-            {
-                float sampleX = (startPos.x + cX * size) / noiseGen.scale;
-                float sampleY = (startPos.y + cY * size) / noiseGen.scale;
-                int bIndex = MathFun.Floor(Noise.VoronoiNoise(new Vector2(sampleX, sampleY), biomes.Length, seed).y);
-
-                corners[cX + cY * 2] = biomes[bIndex].biomeHeight;
-            }
-        }
 
         for (int x = 0; x < size; x++)
         {
             for (int y = 0; y < size; y++)
             {
+                Vector2 point = new Vector2(startPos.x + x, startPos.y + y) / noiseGen.scale;
+                Vector3[] gridLoc = Noise.VoronoiNoise(point, noiseGen.noiseOffset, biomes.Length, seed);
 
-                float cX = MathFun.Curve(x / (float)size);
-                float cY = MathFun.Curve(y / (float)size);
-                float x1 = MathFun.Lerp(corners[0], corners[1], cX);
-                float x2 = MathFun.Lerp(corners[2], corners[3], cX);
-                float height = MathFun.Lerp(x1, x2, cY);
+                float height = 1f;
+                float prevHeight;
+                float dist = 2f;
+                float secondDist;
+                float bHeight = 1f;
+                float prevBHeight;
 
+                for(int v = 0; v < 9; v++)
+                {
+                    float newDist = Vector2.Distance(point, new Vector2(gridLoc[v].x, gridLoc[v].y));
+
+                    if (v > 0) prevBHeight = bHeight;
+                    else prevBHeight = biomes[MathFun.Floor(gridLoc[v].z)].biomeHeight;
+                    bHeight = biomes[MathFun.Floor(gridLoc[v].z)].biomeHeight;
+
+                    if (newDist < dist)
+                    {
+                        secondDist = dist;
+                        dist = newDist;
+                        height = 1f - newDist;
+                        dist = newDist;
+                    }                    
+                }
                 noiseMap[x, y] = height * noiseGen.strength;
             }
         }
@@ -110,18 +114,34 @@ public static class BuildChunk
                             pNoise *= layerMap[l][x, z] * influence;
                             break;
                         case NoiseLayer.LayerAmp.PushFromZero:
-                            float move = layerMap[l][x, z];
+                            float movePFZ = layerMap[l][x, z];
                             if (pNoise < 0)
                             {
-                                if (move > 0)
-                                    move *= -1;
+                                if (movePFZ > 0)
+                                    movePFZ *= -1;
                             }
                             else
                             {
-                                if (move < 0)
-                                    move *= -1;
+                                if (movePFZ < 0)
+                                    movePFZ *= -1;
                             }
-                            pNoise += move * influence;
+                            pNoise += movePFZ * influence;
+                            break;
+                        case NoiseLayer.LayerAmp.CracksAdd:
+                            float moveCA = 0f;
+                            if (noiseGen.layer[l].threshold >= MathFun.Abs(layerMap[l][x, z]))
+                            {
+                                moveCA = layerMap[l][x, z] * influence;
+                            }
+                            pNoise += moveCA;
+                            break;
+                        case NoiseLayer.LayerAmp.CracksMult:
+                            float moveCM = 1f;
+                            if (noiseGen.layer[l].threshold >= MathFun.Abs(layerMap[l][x, z]))
+                            {
+                                moveCM = layerMap[l][x, z] * influence;
+                            }
+                            pNoise *= moveCM;
                             break;
                     }                    
                 }
