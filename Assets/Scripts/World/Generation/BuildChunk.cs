@@ -15,29 +15,39 @@ public static class BuildChunk
                 Vector2 point = new Vector2(startPos.x + x, startPos.y + y) / noiseGen.scale;
                 Vector3[] gridLoc = Noise.VoronoiNoise(point, noiseGen.noiseOffset, biomes.Length, seed);
 
-                float height = 1f;
-                float prevHeight;
-                float dist = 2f;
-                float secondDist;
-                float bHeight = 1f;
-                float prevBHeight;
+                float[] dist = new float[] { 2f, 2f, 2f };
+                float[] bHeight = new float[] {1f, 1f, 1f };
 
                 for(int v = 0; v < 9; v++)
                 {
                     float newDist = Vector2.Distance(point, new Vector2(gridLoc[v].x, gridLoc[v].y));
+                    float newHeight = gridLoc[v].z;
 
-                    if (v > 0) prevBHeight = bHeight;
-                    else prevBHeight = biomes[MathFun.Floor(gridLoc[v].z)].biomeHeight;
-                    bHeight = biomes[MathFun.Floor(gridLoc[v].z)].biomeHeight;
-
-                    if (newDist < dist)
+                    for (int i = 0; i < 3; i++)
                     {
-                        secondDist = dist;
-                        dist = newDist;
-                        height = 1f - newDist;
-                        dist = newDist;
-                    }                    
+                        if (dist[i] > newDist)
+                        {
+                            for (int r = 2; r > i; r--)
+                            {
+                                dist[r] = dist[r - 1];
+                                bHeight[r] = bHeight[r - 1];
+                            }
+                            dist[i] = newDist;
+                            bHeight[i] = newHeight;
+                        }
+                    }
                 }
+
+                float height = 0f;
+                float tot = 0f;
+
+                for(int a = 0; a < 3; a++)
+                {
+                    tot += dist[a];
+                    height += MathFun.Lerp(0f, bHeight[a], dist[a]);
+                }
+                height /= 3;
+
                 noiseMap[x, y] = height * noiseGen.strength;
             }
         }
@@ -126,6 +136,9 @@ public static class BuildChunk
                                     movePFZ *= -1;
                             }
                             pNoise += movePFZ * influence;
+                            break;
+                        case NoiseLayer.LayerAmp.Blend:
+                            pNoise = MathFun.Lerp(pNoise, layerMap[l][x, z], noiseGen.layer[l].threshold);
                             break;
                         case NoiseLayer.LayerAmp.CracksAdd:
                             float moveCA = 0f;

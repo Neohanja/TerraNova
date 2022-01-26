@@ -22,7 +22,8 @@ public class NoiseLayer
         PushFromZero,
         Multiply,
         CracksAdd,
-        CracksMult
+        CracksMult,
+        Blend
     }
 
     public enum LayerType

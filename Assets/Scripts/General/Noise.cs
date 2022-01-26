@@ -89,6 +89,7 @@ public static class Noise
                 float vY = y + oY + RanGen.PullNumber(seed, oX + x, oY + y, 44 + offset) % a / b;
                 int height = RanGen.PullNumber(seed, oX + x, oY + y, 66 + offset) % indexes;
                 vPoints[index] = new Vector3(vX, vY, height);
+                index++;
             }
         }
 
